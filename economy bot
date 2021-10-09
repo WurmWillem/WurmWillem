@@ -333,4 +333,4 @@ async def help(ctx):
 
 
 keep_alive()
-client.run("ODg2NTI4MTk0MTEzNTkzMzg0.YT25uA.g6YDNsr-73MuQ74-2nlsWwhrEVY")    
+client.run(TOKEN)    
