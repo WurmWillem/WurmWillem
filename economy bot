@@ -4,17 +4,21 @@ import json
 import random
 from keep_alive import keep_alive
 
-client = commands.Bot(command_prefix="!")
+intents = discord.Intents.default()
+intents.members = True
+
+client = commands.Bot(command_prefix="!",intents=intents)
 client.remove_command("help")
 
 willie = ['Alexander.jpg','Oranje.jpg','Jan.png','Gert.jpg','Woeste.jpg','Bol.png','Column.jpg','Jan.jpg','Stockman.jpg','Pet.jpg','Zorge.jpg','Willem de chad.jpg','Dafoe.jpg','Willie.jpg','Willem-1.jpg','Willem3.jpg','wijkraad.jpg','schrijver.jpg','Willem','Willem Bruil.png','I forgor.jpg','kurt willem.jpg','Namik.jpg','Neutelings.jpg','luister.jpg','velde.jpg']
 
-mainshop = [{'name':'Watch','price':100},
-            {'name':'couscous','price':500}]
+mainshop = [{'name':'couscous','price':750,'couscous': 2,'desc':'Eat couscous and multiply your income by 2'},
+            {'name':"pindaKlaas",'price':2500,'pindaklaas': 3,'desc':'Eat pindaKlaas and multiply your income by 2.5'},
+            {'name':"Dani's",'price':15000,"dani's": 5,'desc':"Drink Dani's milk and multiply your income by 5"}]
 
 @client.event
 async def on_ready():
-    print('Running...') #Check line 100
+    print('Running...') 
 
 
 @client.command(aliases=["bal"])
@@ -35,15 +39,21 @@ async def balance(ctx):
 @client.command(aliases=["Willem","willem"])
 async def serve(ctx):
     await open_account(ctx.author)
-
     users = await get_bank_data()
     user = ctx.author
+    mult = 1
     earnings = random.randrange(10,101)
-
-    await ctx.send(file=discord.File(".//images//" + random.choice(willie)))
-    await ctx.send(f"You served Willem and earned {earnings} coins")
-
+    print(earnings)
+    mult = users[str(user.id)]["mult"]
+    print(mult)
+    earnings *= mult
+    print(earnings)
     users[str(user.id)]["wallet"] += earnings
+    try:
+        await ctx.send(file=discord.File(".//images//" + random.choice(willie)))
+        await ctx.send(f"You served Willem and earned {earnings} coins")
+    except:
+      await ctx.send(f"You served Willem and earned {earnings} coins")    
 
     with open("mainbank.json","w") as f:
       json.dump(users,f)
@@ -55,51 +65,32 @@ async def shop(ctx):
 
   for item in mainshop:
     name = item['name']
+    if name == "Dani's":
+      name = item['name'] + " milk"
     price = item['price']
-    em.add_field(name = name, value = price) 
+    desc = item['desc']
+    em.add_field(name = name, value = f"{price} coins\n\n{desc}") 
 
   await ctx.send(embed = em)      
 
 
 @client.command()
-async def buy(ctx, item, amount = 1):
+async def buy(ctx, item, idk):
   await open_account(ctx.author)
-
-  res = await buy_this(ctx.author, item, amount)
+  res = await buy_this(ctx.author, item)
 
   if not res[0]:
     if res[1] == 1:
       await ctx.send("That object isn't there")
       return
     if res[1] == 2:
-      await ctx.send(f"You don't have enough points in your bank to buy {amount}")
+      await ctx.send(f"You don't have enough points in your bank to buy {item}")
       return
 
-  await ctx.send(f'You just bought {amount} {item}')     
+  await ctx.send(f'You just bought {item}')     
   
 
-@client.command()
-async def bag(ctx):
-  await open_account(ctx.author)
-  user = ctx.author
-  users = await get_bank_data()
-
-  try:
-    bag = users[str(user.id)]["bag"]
-  except:
-    bag = []  
-
-  em = discord.Embed(title = "Bag")
-  for item in bag:
-    name = item["item"]
-    amount = item["amount"]  
-
-    em.add_field(name = name, value = amount)  
-
-  await ctx.send(embed = em)  
-
-
-async def buy_this(user, item_name, amount):
+async def buy_this(user, item_name):
   item_name = item_name.lower()
   name_ = None
   for item in mainshop:
@@ -112,7 +103,7 @@ async def buy_this(user, item_name, amount):
   if name_ == None:
     return [False,1]
 
-  cost = price*amount
+  cost = price
 
   users = await get_bank_data()
 
@@ -122,23 +113,19 @@ async def buy_this(user, item_name, amount):
     return [False,2]
 
   try:
-      index = 0
       t = None
       for thing in users[str(user.id)]["bag"]:
         n = thing["item"]
         if n == item_name:
-          old_amt = thing["amount"]
-          new_amt = old_amt + amount
-          users[str(user.id)]["bag"][index]["amount"] = new_amt
           t = 1
           break
-          index+=1
 
       if t == None:
-        obj = {"item":item_name , "amount" : amount}
+        obj = {"item":item_name}
         users[str(user.id)]["bag"].append(obj)
+        
   except:
-    obj = {"item":item_name , "amount" : amount}
+    obj = {"item":item_name}
     users[str(user.id)]["bag"] = [obj]        
 
   with open("mainbank.json","w") as f:
@@ -146,7 +133,30 @@ async def buy_this(user, item_name, amount):
 
   await update_bank(user,cost*-1,"bank")
 
+  users[str(user.id)]["mult"] += mainshop[2]["dani's"]
+
   return [True,"Worked"]
+
+
+
+@client.command()
+async def bag(ctx):
+  await open_account(ctx.author)
+  user = ctx.author
+  users = await get_bank_data()
+
+  try:
+    bag = users[str(user.id)]["bag"]
+  except:
+    bag = []  
+  
+  em = discord.Embed(title = ctx.author.name, description = "Total multiplier = " + str(users[str(user.id)]["mult"])+"X")
+
+  for item in bag:
+    name = item["item"]
+    em.add_field(name = name, value = "Lekker")  
+
+  await ctx.send(embed = em)  
           
 
 @client.command(aliases=["draw"])
@@ -181,13 +191,13 @@ async def deposit(ctx, amount = 0):
     amount = int(amount)
 
     if amount == 0:
-        await ctx.send("Please enter the amount of money you want to withdraw")
+        await ctx.send("Please enter the amount of coins you want to deposit")
         return
     
     bal = await update_bank(ctx.author)
 
     if amount > bal[0]:
-        await ctx.send("You don't have enough money to withdraw that much")
+        await ctx.send("You don't have enough coins to deposit that much")
         return
     if amount < 0:
         await ctx.send("The amount needs to be positive")
@@ -208,13 +218,13 @@ async def send(ctx, member:discord.Member, amount = 0):
     amount = int(amount)
 
     if amount == 0:
-        await ctx.send("Please enter the amount of money you want to withdraw")
+        await ctx.send("Please enter the amount of coins you want to send")
         return
     
     bal = await update_bank(ctx.author)
 
-    if amount > bal[0]:
-        await ctx.send("You don't have enough money to withdraw that much")
+    if amount > bal[1]:
+        await ctx.send("You don't have enough coins in your bank to send that many coins")
         return
     if amount < 0:
         await ctx.send("The amount needs to be positive")
@@ -233,13 +243,12 @@ async def bet(ctx, amount = 0):
     amount = int(amount)
 
     if amount == 0:
-        await ctx.send("Please enter the amount of money you want to withdraw")
+        await ctx.send("Please enter the coins of money you want to bet")
         return
         
     bal = await update_bank(ctx.author)
-
-    if amount > bal[0]:
-        await ctx.send("You don't have enough money to withdraw that much")
+    if amount > bal[1]:
+        await ctx.send("You don't have enough coins in your bank to bet that much")
         return
     if amount < 0:
         await ctx.send("The amount needs to be positive")
@@ -247,39 +256,53 @@ async def bet(ctx, amount = 0):
 
     final = []
 
-    for i in range(3):
-        a = random.choice(["X","Y","Z"])
+    a = random.choice(["X","Y"])
 
-        final.append(a)
+    final.append(a)
 
-    if final[0] == final[1] or final[0] == final[2] or final[2] == final[1]: 
-        await update_bank(ctx.author, 2*amount)
+    if final[0] == "X": 
+        await update_bank(ctx.author, amount, "bank")
         await ctx.send("You win!")
         await ctx.send("You get double the amount of coins!")
     
     else:
-         await update_bank(ctx.author, -1*amount)
+         await update_bank(ctx.author, -1*amount, "bank")
          await ctx.send("You lost!")
          await ctx.send("You lose the money you bet")   
 
-    await update_bank(ctx.author, -1*amount)   
+            
 
 
 @client.command(aliases=["lb"])
-async def leaderboard(ctx, x = 5):
+async def leaderboard(ctx, x = 5): 
+  
   users = await get_bank_data()
+  await open_account(ctx.author)
 
   leader_board = {}
   total = []
-
   for user in users:
-    name = int(user)
-    total_amount = users[user]["wallet"] + users[user]["bank"]
-    leader_board[total_amount] = name
+      name = int(user)
+      total_amount = users[user]["wallet"] + users[user]["bank"]
+      leader_board[total_amount] = name
+      total.append(total_amount)
 
-    total.append(total_amount)
+  total = sorted(total,reverse=True)    
 
-  total = sorted(total,reverse=True)  
+  em = discord.Embed(title = f"Top {x} Richest People",color = discord.Color(0xfa43ee))
+  index = 1
+  for amt in total:
+    
+    id_ = int(leader_board[amt])
+    member = client.get_user(id_)
+    name = member.name
+    em.add_field(name = f"{index}. {name}" , value = f"{amt} pts.",  inline = False)
+    if index == x:
+      break
+    else:
+     index += 1
+
+  await ctx.send(embed = em)
 
 
 
@@ -293,7 +316,8 @@ async def open_account(user):
     else:
         users[str(user.id)] = {}
         users[str(user.id)]["wallet"] = 0
-        users[str(user.id)]["bank"] = 0  
+        users[str(user.id)]["bank"] = 0
+        users[str(user.id)]["mult"] = 1 
     
     with open("mainbank.json","w") as f:
       json.dump(users,f)
@@ -322,15 +346,19 @@ async def update_bank(user, change = 0, mode = "wallet"):
 
 @client.group(invoke_without_command=True)
 async def help(ctx):
-  em = discord.Embed(title="Help", description="all my puclic commands are listed beneath")
-  em.add_field(name = "Serve/Willem", value = "Serve Willem and get coins")
-  em.add_field(name = "balance", value = "shows you the amount of coins you have in your wallet and bank")
-  em.add_field(name="withdraw/deposit", value="transfers coins from your wallet to your bank and the other way around")
-  em.add_field(name = "send", value = "give coins to other people")
-  em.add_field(name = "bet", value = "bet coins and have a 1 in 2 chance to double your bet or lose the money you bet")
+  em = discord.Embed(title="Help", description="All my puclic commands are listed beneath, my prefix = !")
+  em.add_field(name = "serve/Willem", value = "Serve Willem and get coins in your wallet")
+  em.add_field(name = "balance", value = "Shows you the amount of coins you have in your wallet and bank")
+  em.add_field(name = "shop", value ="Shows all the items you can buy and how much they cost")
+  em.add_field(name = "buy", value = "buy items with coins from your bank")
+  em.add_field(name = "bag", value = "Shows what items you have")
+  em.add_field(name = "leaderboard", value = "Shows the top 5 people with the most coins")
+  em.add_field(name="deposit/withdraw", value ="transfers coins from your wallet to your bank and the other way around")
+  em.add_field(name = "send", value = "give coins from your bank to other people")
+  em.add_field(name = "bet", value = "bet coins from your bank and have a 50% chance to double your bet or lose the money you bet")
 
   await ctx.send(embed=em)
 
 
 keep_alive()
-client.run(TOKEN)    
+client.run("TOKEN")    
