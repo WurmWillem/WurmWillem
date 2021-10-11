@@ -1,0 +1,106 @@
+import discord
+import os
+import random
+import sys
+from keep_alive import keep_alive
+from discord.ext import commands
+
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+
+client = commands.Bot(command_prefix="")
+client.remove_command("help")
+
+print('Bot running...')
+
+willie = ['Alexander.jpg','Oranje.jpg','Jan.png','Gert.jpg','Woeste.jpg','Bol.png','Column.jpg','Jan.jpg','Stockman.jpg','Pet.jpg','Zorge.jpg','Willem de chad.jpg','Dafoe.jpg','Willie.jpg','Willem-1.jpg','Willem3.jpg','wijkraad.jpg','schrijver.jpg','Willem','Willem Bruil.png','I forgor.jpg','kurt willem.jpg','Namik.jpg','Neutelings.jpg','luister.jpg','velde.jpg']
+
+responses = ['It is certain.','It is decidedly so.','Without a doubt.','Yes definitely.','You may rely on it.','As I see it, yes.','Most likely.','Outlook good.','Yes.','Signs point to yes.','Dont count on it.','My reply is no.','My sources say no.','Outlook not so good.','Very doubtful.']
+
+
+@client.command(aliases=["willem"])
+async def Willem(ctx, amount=1):
+  if amount < 100001:
+   for i in range(amount):
+     await ctx.send(file=discord.File(random.choice(willie)))
+
+@client.command(aliases=["8"])
+async def _8ball(ctx,*,question):
+  await ctx.send(random.choice(responses))
+      
+
+@client.event
+async def on_command_error(ctx, error):
+  if isinstance(error, commands.MissingRequiredArgument):
+    await ctx.send('Please pass in all required arguments')
+
+
+@client.command(aliases=["clear"])
+async def Clear(ctx, amount=1):
+  await ctx.channel.purge(limit=amount + 1)
+
+@client.command()
+async def Eddie(ctx):  
+  await ctx.send(file=discord.File('Eddie.jpg'))  
+
+
+@client.command()
+@commands.has_permissions(change_nickname=True)
+async def stop(ctx):
+  
+  await ctx.send("guess i'll die")
+  sys.exit()
+
+@client.command(aliases=["Spam"])
+async def spam(ctx, word1="", count = 5):
+  i = 0
+  while i < count:
+    await ctx.send(word1)
+    i = i + 1
+
+
+@client.command(aliases=["Hoi"])
+async def hoi(ctx):
+  await ctx.send("hallo " + ctx.author.name)
+  await ctx.send("send \"help\" to see my features")
+
+
+@client.command(aliases=["Send"])
+async def send(ctx, word,word2="",word3="",word4="",word5="",word6="",word7=""):
+  if ctx.author.id == 504740278855401482:
+   await ctx.message.delete()
+   await ctx.send(f"{word} {word2} {word3} {word4} {word5} {word6} {word7}")
+
+
+@client.group(invoke_without_command=True)
+async def help(ctx):
+  em = discord.Embed(title="Help", description="all my puclic commands are listed beneath")
+  em.add_field(name = "General", value = "Willem, Eddie, 8, spam")
+  em.add_field(name = "Moderation", value = "clear, kick, ban, unban, mute")
+  em.add_field(name="Other",value="error, hoi")
+  
+  em.add_field(name="stop", value="use the stop command if you want to disable the bot. WurmWillem will have to manually enable the bot again so don't use it without reason")
+
+  await ctx.send(embed=em)
+
+async def func():
+    await client.wait_until_ready()
+    channel = client.get_channel(759313071914221618)
+    await channel.send("Daily Willem")
+    await channel.send(file=discord.File(random.choice(willie)))
+
+@client.event
+async def on_ready():
+    print("Ready")
+
+    #initializing scheduler
+    scheduler = AsyncIOScheduler()
+
+    #sends "Your Message" at 12PM and 18PM (Local Time)
+    scheduler.add_job(func, CronTrigger(hour="4", minute="0", second="0")) 
+
+    #starting the scheduler
+    scheduler.start()
+
+keep_alive()
+client.run(os.getenv('TOKEN'))
