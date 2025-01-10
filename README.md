@@ -1,8 +1,8 @@
 ## Hi I'm WurmWillem, head developer of Rox and Goodman 🦀
 
-[![Most used languages](https://github-readme-stats-r3ps4j.vercel.app/api/top-langs/?username=WurmWillem&theme=github_dark&hide_border=true&layout=compact&hide=jupyter%20notebook&exclude_repo=github-readme-stats,FXrace_server-data,FXproject_server-data)](https://github.com/WurmWillem)
+[![My most used languages](https://github-readme-stats-r3ps4j.vercel.app/api/top-langs/?username=WurmWillem&theme=gruvbox&hide_border=true&layout=compact&hide=jupyter%20notebook&exclude_repo=github-readme-stats,FXrace_server-data,FXproject_server-data)](https://github.com/WurmWillem)
 
-[![My GitHub stats](https://github-readme-stats.vercel.app/api?username=WurmWillem)](https://github.com/WurmWillem/github-readme-stats)
+[![My GitHub stats](https://github-readme-stats.vercel.app/api?username=WurmWillem&show_icons=true&theme=gruvbox)](https://github.com/WurmWillem/github-readme-stats)
 <!--
 **WurmWillem/WurmWillem** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
 
