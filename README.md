@@ -1,5 +1,7 @@
-## Hi there 👋
+## Hi I'm WurmWillem, head developer of Rox and Goodman 🦀
 
+
+[![My GitHub stats](https://github-readme-stats.vercel.app/api?username=WurmWillem)](https://github.com/WurmWillem/github-readme-stats)
 <!--
 **WurmWillem/WurmWillem** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
 
